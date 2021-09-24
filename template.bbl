@@ -1,31 +1,9 @@
-\begin{thebibliography}{MP03}
-
-\bibitem[AS07]{arora2007detection}
-Raman Arora and William~A Sethares.
-\newblock Detection of periodicities in gene sequences: a maximum likelihood
-  approach.
-\newblock In {\em 2007 IEEE International Workshop on Genomic Signal Processing
-  and Statistics}, pages 1--4. IEEE, 2007.
-
-\bibitem[BS85]{buccheri1985time}
-Rosolino Buccheri and Bruno Sacco.
-\newblock Time analysis in astronomy: Tools for periodicity searches.
-\newblock In {\em Data Analysis in Astronomy}, pages 15--27. Springer, 1985.
-
-\bibitem[MP03]{muresan2003orthogonal}
-D~Darian Muresan and Thomas~W Parks.
-\newblock Orthogonal, exactly periodic subspace decomposition.
-\newblock {\em IEEE Transactions on Signal Processing}, 51(9):2270--2279, 2003.
+\begin{thebibliography}{SS99}
 
 \bibitem[SS99]{sethares1999periodicity}
 William~A Sethares and Thomas~W Staley.
 \newblock Periodicity transforms.
 \newblock {\em IEEE transactions on Signal Processing}, 47(11):2953--2964,
   1999.
-
-\bibitem[SS01]{sethares2001meter}
-William~A Sethares and Thomas~W Staley.
-\newblock Meter and periodicity in musical performance.
-\newblock {\em Journal of New Music Research}, 30(2):149--158, 2001.
 
 \end{thebibliography}

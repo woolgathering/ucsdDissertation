@@ -1,3 +1,25 @@
 \chapter{Introduction}
 
 In \cite{sethares1999periodicity}, W. A. Sethares and T. W. Staley introduced the concept of the ``periodicity transform" (PT) whereby a signal can be decomposed into periodic basis vectors by projection onto periodic subspaces. The PT excels in situations where the time series is described best in terms of period rather than frequency. This technique and its variations have been applied to astromonical data (\cite{buccheri1985time}), machine vibration (\cite{muresan2003orthogonal}), gene sequencing (\cite{arora2007detection}), and musical rhythms (\cite{sethares2001meter}); however, its applcation to time-domain audio signals directly has been lacking. Since the basis vectors calculated with the PT often have overlapping spectra, it seems a natural extention to apply the PT to both analysis and synthesis of audio, and especially to musical audio. In doing so, a short-time periodicity transform was developed in order to capture the changing periodic nature of musical signals and is applied to analyze and resynthesize an excerpt of a well-known electronic work.
+
+
+Since Sethares and Staley in 1999, the PT has been developed in multiple directions. This chapter concerns itself with the examining and presenting existing versions and their applicability to audio analysis and synthesis.
+
+\section{Nonorthogonal Periodic Decomposition}
+Sethares and Staley
+
+Original periodicity transform
+
+Basis vectors are not orthogonal.
+
+\section{Orthogonal Periodic Decomposition}
+
+The orthogonal, exactly periodic decomposition of Muresan and Parks is based on the algorithm presented in \cite{wise1976maximum}.
+
+
+
+\section{Ramanujan Periodic Decomposition}
+
+Vaidyanathan and Tenneti
+
+Struggles hardcore with non-integer periods. Suggestion when doing machine vibration is to adjust the samplerate so that the period aligns to an factor of the samplerate. This begs the question why one would have the need to search for a period one already knows is there. That is, without knowing the period a priori it would be impossible to adjust the samplerate accordingly.

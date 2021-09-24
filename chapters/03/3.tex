@@ -1,6 +1,13 @@
-\chapter{Decomposing and Resynthesizing Audio}
+\chapter{Applications Beyond Analysis and Resynthesis}
 
 
-\subsection{Synthetic Audio}
 
-\subsection{Recorded Audio}
+\subsection{Extraction of the Periodic Waveforms}
+The preceeding chapters almost exclusively examined the \emph{detection} of periodic sequences in a signal but in only a few instances are the periodic subsequences themselves revealed for further processing. Namely, while the method of Ramanujan sequences is extremely powerful in revealing the existence of periodic subsequences, the sequences themselves are difficult to recover.
+Likewise, the orthogonal, exactly periodic decomposition of \cite{muresan2003orthogonal} is less useful in audio-space since it is often the case that one desires the harmonic components to be included in the extraction of the waveforms. In order to recover the waveform, additional steps must be undertaken and the result is questionable.
+
+In the method presented in \cite{sethares1999periodicity}, the waveform is derived \emph{first} and is therefore immediately available. In the quadratic optimization method presented in Chapter \ref{chap:qo}, it is relatively straightforward to derive the periodic subsequences by means of a similar process.
+
+\subsection{Time Stretching}
+
+\subsection{Monaural Source Separation}

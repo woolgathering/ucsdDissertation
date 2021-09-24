@@ -119,6 +119,8 @@
 \usepackage{scrextend}
 \usepackage{pslatex}
 \usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{bm}
 
 %% CAPTION
 % This overrides some of the ugliness in ucsd.cls and
@@ -219,23 +221,14 @@
 %  All of the front matter.
 %  This includes the title, degree, dedication, vita, abstract, etc..
 %  Modify the file template_frontmatter.tex to change these pages.
-\include{template_frontmatter}
+% \include{template_frontmatter}
 
 %% DISSERTATION
-
-% A common strategy here is to include files for each of the chapters. I.e.,
-% Place the chapters is separate files:
-%   chapter1.tex, chapter2.tex
-% Then use the commands:
-%   \include{chapter1}
-%   \include{chapter2}
-%
-
-\include{chapters/introduction/introduction}
+% \include{chapters/introduction/introduction}
 \include{chapters/01/1}
-\include{chapters/02/2}
-\include{chapters/03/3}
-\include{chapters/04/4}
+% \include{chapters/02/2}
+% \include{chapters/03/3}
+% \include{chapters/04/4}
 
 %% END MATTER
 

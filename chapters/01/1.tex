@@ -1,64 +1,100 @@
-% Of course, if you prefer, you can just start with
-%   \chapter{My First Chapter Name}
-% and start typing away.
-\chapter{The Many Flavors of the Periodicity Transform}
-Since Sethares, the PT has been developed in multiple directions. This chapter concerns itself with the examining and presenting existing versions and their potential applicability to audio analysis and synthesis.
+\chapter{Quadratically Optimized Periodic Decomposition} \label{chap:qo}
 
-\section{Nonorthogonal Periodic Decomposition}
-    Sethares and Staley:
+The fundamental difference between this and \cite{sethares1999periodicity} is the difference in computing the residual. That is, one can frame the residual computation as a quadratic program which allows one to more accurately and find the periodic components.
 
-    A sequence of real numbers $x(k)$ is called $p$-periodic if there is an integer $p$ with $x(k+p) = x(k)$ for all integers $k$. In practice, we will consider signals of finite length $N$, which are always periodic with period $P_N$. Smaller periodicities are found by projecting $x_N$ onto the subspaces $P_p$ for $p < N$. When $x_N$ is “close to” a periodic subspace $P_p$ then there is a $p$-periodic element $x_p$ that is contained within $x_N$. The fundamental formula for projection is:
-    \begin{equation} \label{eq:proj}
-      \alpha_s = \frac{1}{\lfloor N/p \rfloor} \sum_{n=0}^{\lfloor N/p \rfloor -1} x_{N_i} (s + np)
-    \end{equation}
-    where $N_i = p \lfloor N/p \rfloor$ to deal with partial sequences.\footnote{This is slightly modified in this paper, described in Section \ref{wholeperiods}.} Most notably, this transform works only with \emph{integer} periods.
+\section{Find the matrix $\bm{A}$}
+Assume we have the following:
+\begin{align*}
+x &= \text{input sequence} \\
+Q &= \text{set of periods posited to be in } x \\
+f(n) &= \{f \in N : f|n \} \text{ (i.e. a function that the set of all factors of $n$)} \\
+\varphi(n) &= \text{Euler's totient function}
+\end{align*}
 
-    % \begin{equation}
-    %   \delta_p^s(j) =
-    %   \left\{ \begin{array}{l}
-    %   1, \text{ if }(j-s)\text{ mod }{p=0} \\
-    %   0, \text{ otherwise.}
-    %    \end{array} \right.
-    % \end{equation}
-    % where $s$ is the “time shift” so that $s = [0,1,2,...,p-1]$
+Let $\bm{A}$ be a ``basis matrix'', or a matrix of linearly independent columns which span the space of the sequence $x$ with periods $Q$. The column dimensionality, $c_{\bm{A}}$, of $\bm{A}$ is:
+\begin{align*}
+    c_{\bm{A}} = \sum_{R_i \in R} \varphi(R_i)
+\end{align*}
+where $R$ is the union of all the factors of the periods in $Q$:
+\begin{align*}
+    R = \bigcup_{q_i \in Q} f(q_i)
+\end{align*}
 
-    \subsection{An Example}
-    This process is most easily understood in the context of a short example. Let $x = \{ ... , 2, -1.1, -1.1, 2,$
-    $-1.2, -1.2, 2, -1.1, -1.1, 2, -1.2, -1.1, 2, -1.1,...\}$ where $N = 14$. The signal is plotted in Figure \ref{fig:firstSig_proj} in blue. Let $p = 3$ which means $s = \{0,1,2\}$. For $s=0$:
-    $$
-    (s + np) = [1, 4, 7, 10, 13]
-    $$
-    $$
-    x(s + np) = [2,2,2,2,2]
-    $$
-    Therefore:
-    $$
-    \alpha_0 = \frac{1}{\lfloor 14/3 \rfloor} \sum_{n=0}^{\lfloor 14/3 \rfloor -1} x(s + np) = 2
-    $$
-    Then replace all values at indicies $(s+np)$ with 2, giving $[2,2,2,2,2]$. Similarly, $\alpha_1 = [-1.14,-1.14,-1.14,-1.14, -1.14]$ and $\alpha_2 = [-1.125,-1.125,-1.125,-1.125]$. Interleaving the results, we find $x_3 = \{..., 2, -1.14, -1.125,...$
-    $\}$. This projection is plotted over the original signal in the bottom of Fig.1.
-
-    \begin{figure}[h]
-      \centering
-      \includegraphics[width=1\textwidth]{chapters/01/figs/firstSig_proj.png}
-      \caption[Sethares and Staley's periodicity transform overlayed.]
-    {The periodicity transform of Sethares and Staley. \index{firstSig_proj}}
-      \label{fig:firstSig_proj}
-    \end{figure}
-
-    More generally,
-    \begin{equation} \label{eq:pixp}
-      x_p = \pi(x, P_p) = \sum_{s=0}^{p-1} \alpha_s \delta_p^s
-    \end{equation}
-
-    where, $\pi(x, P_p)$ represents the projection of $x$ onto $P_p$, $\delta_p^s$ are the $p$-periodic basis elements of $P_p$, and $s$ is as defined above. (\ref{eq:pixp}) describes the method of projection used in this paper and the M-best $\gamma$ algorithm. Of note is the fact that these periodic basis vectors as acquired by (\ref{eq:pixp}) are \emph{not} orthogonal. Muresan and Parks in \cite{muresan2003orthogonal} presented a method of finding orthogonal periodic basis vectors but their method was not implemented for this paper (and may in fact be unncessary when resynthsizing audio).
+In creating the basis matrix $\bm{A}$, one must ensure that each periodic component is counted \emph{once}. That is, each periodic component $q$ also contains the components $d|q$ and one must construct the basis matrix with this in mind, taking care to remove the component from a subspace if it is already present. The method for doing this is as follows:
 
 
 
-\section{Orthogonal Periodic Decomposition}
 
-Orthogonal decomposition of Muresan and Parks.
+Define $P$:
+\begin{align*}
+    P &= \Bigg( \bigcup_{\forall p, q \in Q} f(p) \cap f(q) \Bigg) \cup Q
+\end{align*}
+i.e. the union of the intersections of the factors of all the elements in $Q$.
 
-\section{Ramanujan Periodic Decomposition}
+To find the column dimensionality, $c_{p}$, of the basis matrix $\bm{B_p}$ for $p \in P$:
+\begin{align*}
+    % c_{p} &= p - \sum_{f : f(p) \cap P \setminus p} \varphi(f)
+    c_{p} &= p - \sum_{d|p \in P \setminus p} \varphi(d)
+\end{align*}
 
-Vaidyanathan and Tenneti
+%% If N is the columns
+% We then define $\bm{A}$ as:
+% \begin{align*}
+%     \bm{A} &= \begin{bmatrix}
+%             \bm{B}_{p_0} \\
+%             \bm{B}_{p_1} \\
+%             \vdots \\
+%             \bm{B}_{p_n} \\
+%         \end{bmatrix}
+%         , \text{ } \forall p \in P
+% \end{align*}
+% where there are $n$ elements in $\bm{P}$.
+
+We then define $\bm{A}$ as:
+\begin{align*}
+    \bm{A} &= \begin{bmatrix}
+            \bm{B}_{p_0} &
+            \bm{B}_{p_1} &
+            \hdots &
+            \bm{B}_{p_n}
+        \end{bmatrix}
+        , \text{ } \forall p \in P
+\end{align*}
+where there are $n$ elements in $\bm{P}$.
+
+To find the total column dimensionality, $c_{\boldsymbol{A}}$ of the matrix $\bm{A}$:
+\begin{align*}
+    c_{\bm{A}} &= \sum_{p \in P} c_p
+\end{align*}
+
+% In this way, we can be assured that not only are the basis vectors in $\bm{A}$ linearly independent, but also that all traces of some period $q$ are removed from the residual signal $h$.
+
+\subsection{This also works}
+We can also get a basis matrix for the periods in $q$ by using the same equation as above that uses $varphi(n)$ by creating $\bm{A}$ along the way and keeping track of which periods (and factors of the periods) we've added along the way.
+
+Let $F = \emptyset$. To find the column dimensionality, $c_q$, for $q \in Q$:
+\begin{align}
+    c_q &= q - \sum_{d|q \in F} \varphi(d)
+\end{align}
+
+We then add elements to $F$ every time we add a basis matrix $\bm{B}_q$ to $\bm{A}$:
+\begin{align*}
+    F &= \{ F \cup f(q) \}_{\neq}
+\end{align*}
+i.e. every time we process a period $q$, add all the factors of $q$ to $F$, removing duplicates.
+
+Repeat this process for every $q \in Q$, adding to $F$ along the way. (This means that we need to keep track of which factors we've added along the way which makes it uglier in some ways, better in others.)
+
+Therefore, we then define $\bm{A}$ as:
+\begin{align*}
+    \bm{A} &= \begin{bmatrix}
+            \bm{B}_{q_0} &
+            \bm{B}_{q_1} &
+            \hdots &
+            \bm{B}_{q_n}
+        \end{bmatrix}
+        , \text{ } \forall q \in \bm{Q}
+\end{align*}
+where there are $n$ elements in $\bm{Q}$.
+
+\section{Not a real section but describing getting the real periods back}
