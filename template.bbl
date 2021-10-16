@@ -1,4 +1,9 @@
-\begin{thebibliography}{SS99}
+\begin{thebibliography}{MP03}
+
+\bibitem[MP03]{muresan2003orthogonal}
+D~Darian Muresan and Thomas~W Parks.
+\newblock Orthogonal, exactly periodic subspace decomposition.
+\newblock {\em IEEE Transactions on Signal Processing}, 51(9):2270--2279, 2003.
 
 \bibitem[SS99]{sethares1999periodicity}
 William~A Sethares and Thomas~W Staley.

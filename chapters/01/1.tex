@@ -1,100 +1,315 @@
-\chapter{Quadratically Optimized Periodic Decomposition} \label{chap:qo}
+\chapter{Quadratically Optimized Periodic Decomposition and Extraction}\label{chap:qo}
 
-The fundamental difference between this and \cite{sethares1999periodicity} is the difference in computing the residual. That is, one can frame the residual computation as a quadratic program which allows one to more accurately and find the periodic components.
-
-\section{Find the matrix $\bm{A}$}
-Assume we have the following:
-\begin{align*}
-x &= \text{input sequence} \\
-Q &= \text{set of periods posited to be in } x \\
-f(n) &= \{f \in N : f|n \} \text{ (i.e. a function that the set of all factors of $n$)} \\
-\varphi(n) &= \text{Euler's totient function}
-\end{align*}
-
-Let $\bm{A}$ be a ``basis matrix'', or a matrix of linearly independent columns which span the space of the sequence $x$ with periods $Q$. The column dimensionality, $c_{\bm{A}}$, of $\bm{A}$ is:
-\begin{align*}
-    c_{\bm{A}} = \sum_{R_i \in R} \varphi(R_i)
-\end{align*}
-where $R$ is the union of all the factors of the periods in $Q$:
-\begin{align*}
-    R = \bigcup_{q_i \in Q} f(q_i)
-\end{align*}
-
-In creating the basis matrix $\bm{A}$, one must ensure that each periodic component is counted \emph{once}. That is, each periodic component $q$ also contains the components $d|q$ and one must construct the basis matrix with this in mind, taking care to remove the component from a subspace if it is already present. The method for doing this is as follows:
+As noted in XXX, XXX, and XXX, it is possible to frame the problem as a convex optimization program where the reconstruction error is minimized. The choice then becomes which bases to use
 
 
 
+In this case, the primary concern is with retrieving an appropriate set of periodic bases that describe the input signal to some tolerance such that the period $p$ of the base is such that $p < N/2$ where $N$ is the length of the input. These bases must further be constrained by the qualitative condition that they must be "listenable components" in that when periodically extended, they sound as if they are a component of the sound that is analyzed. This will become clear in Chapter \ref{chap:issues} when the difficulties of non-integer periods are explored. Briefly, it is possible to construct a periodic signal with virtually no residual using the Natural Bases by means of periodic functions that bear no resemblance, apart from their mathematical derivation, to the input.
 
-Define $P$:
-\begin{align*}
-    P &= \Bigg( \bigcup_{\forall p, q \in Q} f(p) \cap f(q) \Bigg) \cup Q
-\end{align*}
-i.e. the union of the intersections of the factors of all the elements in $Q$.
+The process in this chapter describes a way by which one may decompose an input signal into component periodic waveforms that are "listenable". The enumerated list below shows each step. We begin by letting $x$ be the input signal and we initialize $x_r = x$.
+\begin{enumerate}
+    \item\textbf{Detection:} Choose the best periodic projection, $x_{r_{_p}}$, for $x_r$. Let $R_i = R_{i-1} \cup p$.
+    \item\textbf{Reconstruction:} Construct a basis matrix that spans the space of $x$ as described by periods $R_i$ using the Natural Bases. Compute the reconstruction and the residual error by means of a convex program.
+    \item\textbf{Stop Function:} Compute the value of a stop function, $s()$, that determines whether or not to continue processing. This function is arbitrary and may have arbitrary arguments.
+    \item\textbf{Recursion:} If one continues processing, repeat the process with the residual error until $s()$ calls to stop.
+\end{enumerate}
+The fundamental difference between this and \cite{sethares1999periodicity} is the difference in computing the residual. That is, one can frame the residual computation as a quadratic program which allows one to alter the result of the Natural Basis to one that minimizes the reconstruction error.
 
-To find the column dimensionality, $c_{p}$, of the basis matrix $\bm{B_p}$ for $p \in P$:
-\begin{align*}
-    % c_{p} &= p - \sum_{f : f(p) \cap P \setminus p} \varphi(f)
-    c_{p} &= p - \sum_{d|p \in P \setminus p} \varphi(d)
-\end{align*}
+\subsection{Defintions}
+Before proceeding, some definitions:
+\begin{itemize}
+    \item $\varphi(n)$ is the Euler's totient of the interger $n$
+\end{itemize}
 
-%% If N is the columns
-% We then define $\bm{A}$ as:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Detection}
+Given an input, the first task is to derive what integer-valued period best describes the data. Several methods have been described in the literature (LIST SOME REFS HERE) and for the purposes of audio processing not limited to encoding and reconstruction, some proved to be more useful than others.
+
+    \subsection{Sethares and Staley}
+    The method of Sethares and Staley has proven to be extremely useful in recovering component periods although it is prone to noise and miscategorization of hidden periods.
+
+    As noted in \cite{sethares1999periodicity}, the columns of $P_p$ are not orthogonal to each other. It is therefore possible, indeed likley, that during reconstruction, two projections $x_{p_0}$ and $x_{p_1}$ will both contribute to a common divisor period, $d$, thus doubling the power of period $d$ in the reconstruction.
+
+    Each basis matrix of period $p$ has $\varphi(p)$ columns that are unique to $P_p$. This means that it is possible to take an orthogonal version of $P_p$ by taking only the first $\varphi(p)$ columns of $P_p$ and setting the rest of the columns to zero. Unfortunately, doing this directly results in projections which have $p - \varphi(p)$ zeros in every periodic repetition. This is untenable for a vareity of reasons.
+
+    In \cite{muresan2003orthogonal}, the authors described a procedure of subspace orthogonalization using the Natural Basis. It is relatively striaghtforward to orthogonalize the projections of Eq. \ref{eq:setharesProjection} without rewriting the procedure in the style of \cite{muresan2003orthogonal} or having zeros in the last $p - \varphi(p)$ columns of $P_p$. For a period $p$, orthogonaize by:
+    \begin{equation}
+        x^{\perp}_{p} = x_p - \sum_{d|p} \pi(x_p, P_d)
+    \end{equation}
+    where $x$ is the input, $d|p$ means that $d$ is a divisor of $p$, and $\pi(x_p, P_d)$ is Eq. \ref{eq:setharesProjection} in \ref{intro:sethares}. The result, $x^{\perp}_{p}$ is the orthogonal projection of $x$ onto $x_p$.
+
+    In order to distinguish a set of basis vectors constructed using the Natural Basis, let $\bm{B}_p$ be a $N \times p$ matrix whose columns are periodic with period $p$ so that
+    \begin{align}
+        \bm{B}_p &= \begin{bmatrix}
+                \delta^0_p &
+                \delta^1_p &
+                \hdots &
+                \delta^{p-1}_p &
+            \end{bmatrix}
+    \end{align}
+    where $\delta^s_p$ is Eq. \ref{eq:naturalBasisVector}.
+
+
+    \subsection{Dictionary Methods}
+    Much of the recent research in the detection of periodicities is centered around dictionary methods.
+
+    Some of these, specifically the Ramanujan dictionary, are extremely robust to noise.
+
+        \subsubsection{Ramanujan Dictionary}
+
+        \subsubsection{Dictionary Learning}
+
+    \subsection{Considerations}
+    Given the integer limitations the projection process, it is generally advisable and preferable to upsample real input data. Issues surrounding the detection and reconstruction of non-integer periods is discussed in Section ????.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Reconstruction}
+Let $Q_i$ be the set of periods found in $x$ by means of a projection method at step $i$. We now ask ourselves: what is the best representation of $x$ using only periods in $Q$?
+
+In \cite{sethares1999periodicity}, the reconstruction is computed by simply summing the projections $x_q$ for $q \in Q$. That is:
+\begin{align}
+    x_r &= \sum{q \in Q} x_q
+\end{align}
+
+In other literature, reconstruction of $x$ is performed similarly by solving
+\begin{equation}
+    \bm{A}x &= y
+\end{equation}
+
+    \subsection{Construction of $\bm{A}$}
+    Let $\bm{A}$ be a ``basis matrix'', or a matrix of linearly independent columns which span the space of the sequence $x$ with periods $q \in Q$ of shape $N \times c_{\bm{A}}$. The column dimensionality is defined as
+    \begin{align}\label{eq:A:c_A}
+        c_{\bm{A}} = \sum_{R_i \in R} \varphi(R_i)
+    \end{align}
+    where $R$ is the union of all the factors of the periods in $Q$ and $f(n)$ is a function that returns all factors of an integer $n$:
+    \begin{align}
+        R &= \bigcup_{q_i \in Q} f(q_i) \label{eq:A:R} \\
+        f(n) &= \{f \in N : f|n \} \label{eq:getFactors}
+    \end{align}
+
+    The columns of $\bm{A}$ itself are the Natural Basis of period $p$ as defined in Eq. \ref{eq:naturalBasis}. Recall two things at this point: that the subspace $P_p$ for a given period $p$ is a matrix of shape $N \times p$ and that each $P_p$ is not orthogonal to others. Therefore, in order to avoid introducing additional power at the period $d$ for $d|p$, one must remove columns from $P_p$ accordingly. But what rows to remove?
+
+    According to Lemma XX in \ref{tenneti2016unified}, a dictionary that is a full rank matrix from period 1 to $N$ consists of keeping the first $\varphi(p)$ columns of $P_p$ for all integers betwen 1 and $N$. In this case, however, it is not true that we want $\bm{A}$ to contain all periods between 1 and $N$ but rather only those periods $q \in Q$. Nonetheless, this gives an idication of how to proceed of which there are two ways: (1) we can construct $\bm{A}$ so that we separate out every factor which appears in two or more $q \in Q$ and take care to remove that factor from $\bm{B}_p$ by subtracting rows or, (2) we can construct $\bm{A}$ by keep track of what periods have been added so far, taking care to not add a factor twice.
+    %%%%% ^^^^ should probably prove that these are equivalent?!?! ^^^^^^^^
+
+    \subsubsection{Separating out common factors in $\bm{A}$}
+        Define $P$:
+        \begin{align}\label{eq:A:commonFactors:P}
+            P &= \Bigg( \bigcup_{\forall p, q \in Q} f(p) \cap f(q) \Bigg) \cup Q
+        \end{align}
+        Notice that $P$ contains all elements of $Q$ as well as any cmmon factors between elements in $Q$.
+
+        To find the column dimensionality, $c_{p}$, of the basis matrix $\bm{B}_p$ for $p \in P$:
+        \begin{align}\label{eq:A:commonFactors:cp}
+            c_{p} &= p - \sum_{d|p \in P \setminus p} \varphi(d)
+        \end{align}
+        Therefore, to constuct $\bm{A}$, we simply concatenate the subspaces $\bm{B}_p$ for $p \in P$:
+        \begin{align}\label{eq:A:commonFactors:A}
+            \bm{A} &= \begin{bmatrix}
+                    \bm{B}_{p_0}^{c_{p_0}} &
+                    \bm{B}_{p_1}^{c_{p_1}} &
+                    \hdots &
+                    \bm{B}_{p_n}^{c_{p_n}}
+                \end{bmatrix}
+                , \text{ } \forall p \in P
+        \end{align}
+        where the superscript indicates the number of columns of $\bm{B}$ to keep. Using this method, it is not imporant which order we concatenate the subspaces but only that we do not doubly count a particular subspace. One can confirm the dimensionality by using Eq. \eqref{eq:A:c_A} and checking that $\sum_{i = 0}^{|P| - 1} c_{p_i} = c_{\bm{A}}$ where $|P|$ is the cardinality of $P$.
+
+        As an example, suppose $Q = \{8, 10, 15\}$. According to Eq. \eqref{eq:A:P}:
+        \begin{align*}
+            P &=
+                \big(
+                \text{ } ( f(8) \cap f(10) ) \text{ } \cup
+                \text{ } ( f(8) \cap f(15) ) \text{ } \cup
+                \text{ } ( f(10) \cap f(15) )
+                \text{ } \big)
+                \text{ } \cup \{8, 10, 15\} \\
+            P &= \{1, 2, 5\} \text{ } \cup \text{ } \{8, 10, 15\} \\
+            P &= \{1, 2, 5, 8, 10, 15\}
+        \end{align*}
+        Now we can calculate the dimensionality of an arbitrary $p \in P$ in any order:
+        \begin{align*}
+            c_1 &= 1 - \sum_{d|1 \in \{2, 5, 8, 10, 15\}} \varphi(d) = 1 \\
+            c_2 &= 2 - \sum_{d|2 \in \{1, 5, 8, 10, 15\}} \varphi(d) = 1 \\
+            \vdots \\
+            c_{10} &= 10 - \sum_{d|10 \in \{1, 2, 5, 8, 15\}} \varphi(d) = 10 - (1 + 1 + 4) = 4 \\
+            \text{etc...}
+        \end{align*}
+
+    \subsubsection{Progressive concatenation of $\bm{A}$}
+    What if one wants to construct $\bm{A}$ in such a way as to \emph{only} include subspaces which are constructed from the elements of $Q$? The above method is easy to understand and works well mathemtically but makes deriving the original periods more complicated. The advantages of this method is that it is not necessary to add subspaces of factors for the periods we are actually interested in and that it simplifies the process of computing the waveforms. However, it requires one to keep track of the order in which periods are added to the subspace.
+
+    That is, each periodic component $q \in Q$ also contains the components $d|q$ and one must construct the basis matrix with this in mind, taking care to remove the component from a subspace if it is already present.
+
+    To do so, we exploit the fact that $n = \sum_{f|n} \varphi(f)$. Let $c_{\bm{A}_i}$ denote the column dimensionality of $\bm{A}$ at step $i$. We also redefine Eq. \eqref{eq:A:R} to be different at each step $i$:
+    \begin{align}\label{eq:A:onlyPeriods:R}
+        R_i = \bigcup^i_{q_j \in Q} f(q_j)
+    \end{align}
+    Given the above, the column dimensionality $c_{\bm{A}_i}$ at step $i$ is:
+    \begin{align*}
+        c_{\bm{A}_i} = \sum_{r \in R_i} \varphi(r)
+    \end{align*}
+    Therefore, the column dimensionality for any $q$ at index (step) $i$ is:
+    \begin{align}
+        c_{q_i} =
+            \begin{cases}
+                q_i, & \text{if } i = 0 \\
+                c_{\bm{A}_i} - c_{\bm{A}_{i-1}}, & \text{otherwise}
+            \end{cases}
+    \end{align}
+    We construct $\bm{A}$ as:
+    \begin{align*}
+        \bm{A} &= \begin{bmatrix}
+                \bm{B}_{q_0}^{c_{q_0}} &
+                \bm{B}_{q_1}^{c_{q_1}} &
+                \hdots &
+                \bm{B}_{q_n}^{c_{q_n}}
+            \end{bmatrix}
+            , \text{ } \forall q \in Q
+    \end{align*}
+    In doing so, we ensure that for every subsequent subspace in $\bm{A}$ is orthogonal to all existing subspaces in $\bm{A}$. Returning to the example in the previous section, we see that
+    \begin{align*}
+        c_{q_0} &= c_{8} = 8 - 0 = 8 \\
+        c_{q_1} &= c_{10} = 16 - 8 = 8 \\
+        c_{q_2} &= c_{8} = 26 - 16 = 10 \\
+    \end{align*}
+    This again can be double-checked using Eq. \eqref{eq:A:c_A}.
+
+    \subsection{Approximation of $x$ using $\bm{A}$}
+    Once $\bm{A}$ has been appropriately constructed, one simply puts $\bm{A}$ in the convex program:
+    \begin{align*}
+        \bm{A}x = y
+    \end{align*}
+    Notice that due to the reconstruction of $\bm{A}$ on each iteration, the resulting basis vectors, when retrived using the method described in Section \ref{section:1:extraction} can change so as to minimize $x - y$. This is also part of the motivation of the stop function in Section \ref{section:1:stopFunction} below. This phenomenon will be detailed in Section \ref{section:1:extraction}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Stop Function}\label{section:1:stopFunction}
+The selection of a stop function is critical for periodic decomposition success if one wishes to pay respect to the qualitiative criteria above. That is, any formulation of the periodicity transform will invariably detect a peroidic waveform of some period $p$ with an input of Gaussian noise. In other words, just because the detection step returns a ``best'' period does not mean that that period has any correlation to the actual content of the signal. The ``best'' period in the residual may contribute to minimizing the reconstruction error but this is a fundamentally different prospect than retriving the integer periods which best describe the signal.
+
+The arguments to the stop function are themselves arbitrary and the its various formulations below reflect this.
+
+    \subsection{Residual Power Threshold}
+    Perhaps the most striaghtforward stop function is checking power of the residual signal, $x_r$. Given a threshold $t$:
+    \begin{align}\label{eq:s:powerThreshold}
+        s(y, t) =
+            \begin{cases}
+                0, & \text{if } t \geq \sum_{N = 0}^{N-1} y[n]^2 \\
+                1, & \text{otherwise}
+            \end{cases}
+    \end{align}
+    When the periodicity transform is performed short-time on a signal, that is, in frames, it is typically best to set $t$ equal to some fractional amount of the input vector $x$ so as to allow the threshold for frame $i$, $t_i$, to be dynamic:
+    \begin{align*}
+        t_i = t \sum_{N = 0}^{N-1} x[n]^2
+    \end{align*}
+    where $0 \leq t < 1$.
+
+    There are of course many variations of the above thresholding formulation in Equation \eqref{eq:s:powerThreshold} such as $||x||_p$.
+
+        \subsubsection{Issues and Complications}
+        If one uses the simple threshold stop function, it is important to recognize that it is possible to continue finding periodic data in a residual that carries no meaningful information as to the ``essence'' of the input signal (refer to the paragraph beginning this section). Although these ``phantom'' periodicities may help the convex program to better minimize the reconstruction error, they often add no value and can often distort the useful periodicities already detected.
+
+        As an example, let $x$ be the combination of three sinusoids with periods 17, 21, and 50, plus zero-mean Gaussian noise with a SNR of -18 dB:
+
+        where $N$ is the length of the signal and is equal to 1000, and $G(n)$ is the Gaussian noise at sample $n$. What periods are found at various values of $t$? Below is the output of the convex program using the projection in Equation \eqref{eq:intro:sethares} and different values of $t$. We also set $t$ directly to simplify:
+        \begin{figure}[h]
+            \centering
+            \includegraphics[width=0.75\textwidth]{PATH/TO/MY/FIG}
+            \caption[A figure showing the effect of different threshold values for the stop function.\index{Values of $t$}]{Results of period detection using various values of $t$. \emph{Top Panel:} $t = 0.2$. Note that not enough data is captured and only two periods are found. \emph{Middle Panel:} $t = 0.1$ Since $t$ is exactly equal to the SNR of the signal, we find that the three periods we expect are found before the algorithm terminates. \emph{Bottom Panel:} $t = 0.05$ Although we find the three periods we expect, the algorithm also finds periods in the residual noise. This has the further effect of distorting the already detected periodic waveforms as one will see in Section \ref{ch3:recoveringWaveforms}}
+            \label{fig:sandiego}
+        \end{figure}
+        Notice that in the bottom panel, $t$ is set too low and we therefore see many periods which, while they do ``exist'', do not necessarly add information but are rather imparted by the projection process and numerical happenstance.
+
+        In a close-to-ideal world (one in which we admit noise), one would simply set $t$ to be the level of the noise floor in the signal. In this way, one would only capture the periodic components while leaving the noise (relatively) untouched. This, of course, is not possible in real data and is especially prone to error when non-integer periods are present. See Section \ref{ch3:nonintegerPeriods} for a longer discussion.
+
+
+    \subsection{Sum of the Power of the Periodic Components}
+    A novel way to approch the problem and one that keeps in mind the qualitative criteria of ``listenability'' is to check whether or not the sum of the powers of the detected periodic waveforms exceeds the power of the original signal. For convenience, we define the power to be $E(x) \equiv \sum_{n = 0}^{N - 1} |x[n]|^2$:
+    \begin{align}
+        s(x, X_Q) = \begin{cases}
+            0, & \text{if } E(x) \leq \sum_{x_q \in X_Q} E(x_q) \\
+            1, & \text{otherwise}
+        \end{cases}
+    \end{align}
+    where $X_Q$ is the set of projections of the best periods acquired through projection of $x_r$ onto $P_p$. Note that these projections are also of length $N$. This often results in a less-than-perfect reconstruction from a residual minimization standpoint but in practice has shown better listenability of the components themselves.
+
+    \subsection{Decrease in the Total Power of Periodic Components}
+    An interesting phenomenon was observed in processing real data, often data that contains noise and/or non-integer periodicities whereby the sums of the derived periodic components \emph{decreases} as more iterations are performed.
+
+    \subsection{Lack of ``Strong'' Periods}
+    If the input $x$ is zero-mean Gaussian white noise, the resulting powers of the periods, normalized by $\sqrt{p}$, 
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Extraction of Periodic Bases}\label{section:1:extraction}
+In contrast to other literature on the periodicity transform, where the primary and only concern is the detection of periodicities, we are concerned here with also hearing the basis vectors themselves.
+
+
+
+
+% Define $P$:
 % \begin{align*}
-%     \bm{A} &= \begin{bmatrix}
-%             \bm{B}_{p_0} \\
-%             \bm{B}_{p_1} \\
-%             \vdots \\
-%             \bm{B}_{p_n} \\
-%         \end{bmatrix}
-%         , \text{ } \forall p \in P
+%     P &= \Bigg( \bigcup_{\forall p, q \in Q} f(p) \cap f(q) \Bigg) \cup Q
 % \end{align*}
-% where there are $n$ elements in $\bm{P}$.
-
-We then define $\bm{A}$ as:
-\begin{align*}
-    \bm{A} &= \begin{bmatrix}
-            \bm{B}_{p_0} &
-            \bm{B}_{p_1} &
-            \hdots &
-            \bm{B}_{p_n}
-        \end{bmatrix}
-        , \text{ } \forall p \in P
-\end{align*}
-where there are $n$ elements in $\bm{P}$.
-
-To find the total column dimensionality, $c_{\boldsymbol{A}}$ of the matrix $\bm{A}$:
-\begin{align*}
-    c_{\bm{A}} &= \sum_{p \in P} c_p
-\end{align*}
+% i.e. the union of the intersections of the factors of all the elements in $Q$.
+%
+% To find the column dimensionality, $c_{p}$, of the basis matrix $\bm{B_p}$ for $p \in P$:
+% \begin{align*}
+%     % c_{p} &= p - \sum_{f : f(p) \cap P \setminus p} \varphi(f)
+%     c_{p} &= p - \sum_{d|p \in P \setminus p} \varphi(d)
+% \end{align*}
+%
+% %% If N is the columns
+% % We then define $\bm{A}$ as:
+% % \begin{align*}
+% %     \bm{A} &= \begin{bmatrix}
+% %             \bm{B}_{p_0} \\
+% %             \bm{B}_{p_1} \\
+% %             \vdots \\
+% %             \bm{B}_{p_n} \\
+% %         \end{bmatrix}
+% %         , \text{ } \forall p \in P
+% % \end{align*}
+% % where there are $n$ elements in $\bm{P}$.
+%
+% To find the total column dimensionality, $c_{\boldsymbol{A}}$ of the matrix $\bm{A}$:
+% \begin{align*}
+%     c_{\bm{A}} &= \sum_{p \in P} c_p
+% \end{align*}
 
 % In this way, we can be assured that not only are the basis vectors in $\bm{A}$ linearly independent, but also that all traces of some period $q$ are removed from the residual signal $h$.
 
-\subsection{This also works}
-We can also get a basis matrix for the periods in $q$ by using the same equation as above that uses $varphi(n)$ by creating $\bm{A}$ along the way and keeping track of which periods (and factors of the periods) we've added along the way.
-
-Let $F = \emptyset$. To find the column dimensionality, $c_q$, for $q \in Q$:
-\begin{align}
-    c_q &= q - \sum_{d|q \in F} \varphi(d)
-\end{align}
-
-We then add elements to $F$ every time we add a basis matrix $\bm{B}_q$ to $\bm{A}$:
-\begin{align*}
-    F &= \{ F \cup f(q) \}_{\neq}
-\end{align*}
-i.e. every time we process a period $q$, add all the factors of $q$ to $F$, removing duplicates.
-
-Repeat this process for every $q \in Q$, adding to $F$ along the way. (This means that we need to keep track of which factors we've added along the way which makes it uglier in some ways, better in others.)
-
-Therefore, we then define $\bm{A}$ as:
-\begin{align*}
-    \bm{A} &= \begin{bmatrix}
-            \bm{B}_{q_0} &
-            \bm{B}_{q_1} &
-            \hdots &
-            \bm{B}_{q_n}
-        \end{bmatrix}
-        , \text{ } \forall q \in \bm{Q}
-\end{align*}
-where there are $n$ elements in $\bm{Q}$.
-
-\section{Not a real section but describing getting the real periods back}
+% \subsection{This also works}
+% We can also get a basis matrix for the periods in $q$ by using the same equation as above that uses $varphi(n)$ by creating $\bm{A}$ along the way and keeping track of which periods (and factors of the periods) we've added along the way.
+%
+% Let $F = \emptyset$. To find the column dimensionality, $c_q$, for $q \in Q$:
+% \begin{align}
+%     c_q &= q - \sum_{d|q \in F} \varphi(d)
+% \end{align}
+%
+% We then add elements to $F$ every time we add a basis matrix $\bm{B}_q$ to $\bm{A}$:
+% \begin{align*}
+%     F &= \{ F \cup f(q) \}_{\neq}
+% \end{align*}
+% i.e. every time we process a period $q$, add all the factors of $q$ to $F$, removing duplicates.
+%
+% Repeat this process for every $q \in Q$, adding to $F$ along the way. (This means that we need to keep track of which factors we've added along the way which makes it uglier in some ways, better in others.)
+%
+% Therefore, we then define $\bm{A}$ as:
+% \begin{align*}
+%     \bm{A} &= \begin{bmatrix}
+%             \bm{B}_{q_0} &
+%             \bm{B}_{q_1} &
+%             \hdots &
+%             \bm{B}_{q_n}
+%         \end{bmatrix}
+%         , \text{ } \forall q \in \bm{Q}
+% \end{align*}
+% where there are $n$ elements in $\bm{Q}$.
+%
+% \section{Not a real section but describing getting the real periods back}

@@ -1,13 +1,14 @@
 # Fdb version 3
-["bibtex template"] 1632435871 "template.aux" "template.bbl" "template" 1632435873
+["bibtex template"] 1634352182 "template.aux" "template.bbl" "template" 1634352184
   "/usr/local/texlive/2021/texmf-dist/bibtex/bst/base/alpha.bst" 1292289607 23907 a5f93555796fb564b924339521f10a7c ""
-  "chapters/01/1.aux" 1632435873 1243 0066e3890a895655577c59b09ce89fc8 "pdflatex"
-  "template.aux" 1632435873 259 f8bf233c36f43cbbeb2367bdc67a3abe "pdflatex"
-  "template.bib" 1630610050 3880 23b82e0bfa022a7ec68f8dcd651b034b ""
+  "chapters/01/1.aux" 1634352184 3757 576dbf1a3160083f4e2a47baa541f071 "pdflatex"
+  "chapters/02/2.aux" 1634352184 1439 a300b80668b7d1072d231bea2992267f "pdflatex"
+  "template.aux" 1634352184 326 2333e5254004345a0859f07b892aa3fc "pdflatex"
+  "template.bib" 1634186053 4211 2d54abb3884c27224d119be4249f1748 ""
   (generated)
   "template.blg"
   "template.bbl"
-["pdflatex"] 1632435872 "template.tex" "template.pdf" "template" 1632435873
+["pdflatex"] 1634352182 "template.tex" "template.pdf" "template" 1634352184
   "/usr/local/texlive/2021/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/local/texlive/2021/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2021/texmf-dist/fonts/tfm/adobe/symbol/psyr.tfm" 1136768653 1408 5937f58aa508ea2cea4901c07d10f5fe ""
@@ -88,15 +89,19 @@
   "/usr/local/texlive/2021/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1616695603 5169178 a2ce6e2d73f603b690db6777d06dbccb ""
   "/usr/local/texlive/2021/texmf-var/web2c/pdftex/pdflatex.fmt" 1630467879 2724740 f3b5e21706d40b4adedb1581d3a90932 ""
   "/usr/local/texlive/2021/texmf.cnf" 1616695596 577 4c1911a7228e554c6032256d3cf5567d ""
-  "chapters/01/1.aux" 1632435873 1243 0066e3890a895655577c59b09ce89fc8 "pdflatex"
-  "chapters/01/1.tex" 1632435850 3332 68b5a73a692657aef6d8b015f7b067ad ""
-  "template.aux" 1632435873 259 f8bf233c36f43cbbeb2367bdc67a3abe "pdflatex"
-  "template.bbl" 1632435872 251 4caabedf0a36401e5e2a3d2f47edf8fb "bibtex template"
-  "template.tex" 1632435869 8502 dbae54b27b226398d6d2149d49cce349 ""
+  "PATH/TO/MY/FIG" 0 -1 0 ""
+  "chapters/01/1.aux" 1634352184 3757 576dbf1a3160083f4e2a47baa541f071 "pdflatex"
+  "chapters/01/1.tex" 1634352175 21849 bae4e8500a0d9c404a31ef5b76b4e9d7 ""
+  "chapters/02/2.aux" 1634352184 1439 a300b80668b7d1072d231bea2992267f "pdflatex"
+  "chapters/02/2.tex" 1634349886 1030 cd3091b6915b9b4515c7ae114106bc19 ""
+  "template.aux" 1634352184 326 2333e5254004345a0859f07b892aa3fc "pdflatex"
+  "template.bbl" 1634352182 470 21fa44772fb497bb1d13509ce7472ec1 "bibtex template"
+  "template.tex" 1634352179 8500 36d4a5c84fc7f782ad779a88cf444df3 ""
   "ucsd.cls" 1630275167 59495 9f16496cf8711d834a570929e2c5b3ae ""
   "uct12.clo" 1630275167 19643 f62ac2e04af1e03704e9d69e3bb3d469 ""
   (generated)
+  "template.pdf"
   "chapters/01/1.aux"
   "template.log"
   "template.aux"
-  "template.pdf"
+  "chapters/02/2.aux"
