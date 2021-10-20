@@ -1,0 +1,106 @@
+\chapter{Extraction of Periodic Bases}\label{chap:extraction}
+
+In contrast to other literature on the periodicity transform, where the primary and concern is the detection of periodicities and extraction of a single periodic waveform, we are concerned here with also hearing the basis vectors themselves.
+
+We want to get the periodic bases out so that they are not necessarily exactly periodic, as is the concern when searching for the periods themselves. Suppose there is a signal, $x$, that is composed of of two signals, $x_0$ an $x_1$ that contain components at each of their factors down to 1 (i.e. they are not exactly periodic) and whose fundamental periods are not mututally prime. Let $C = \text{factors}(x_0) \cap \text{factors}(x_1)$ where $\text{factors}()$ is Equation \eqref{eq:getFactors}. We can see that the two signals share components at periods $c \in C$ and that in order to extract the periods, one must determine how much of each common component is contained in each signal.
+
+
+% We need to create redistribution matricies in order to properly distribute the various factors of Q into all other possibilities. That is, suppose two periodic functions $f$ and $g$ of periods $p_f$ and $p_g$ have a common factor $d$. We can detect the $d$-component of both $f$ and $g$ independently but when it comes time to reconstruct, how do we know how much of the $d$-component goes into f and how much of the $d$-component goes into $g$? We can again solve this by formulating a convex program and solving in the standard format or by least-squares. In this case, however, we will concatenate the period coefficients, zero-padded if necesssary, as the input to the convex program.
+
+In order to solve this, we also set up a convex program whose input vector is the concatenation of the periods $q \in Q$ using their respecitve values in $y$ (output of Equation \eqref{eq:detection:convex}), zero padding as necessary so that each period is ``filled out''. Let this concatenation of periods be $w$.
+
+\section{Construction of $w$}
+An important note here is the order in which the periodic vectors were placed in $\bm{M}_Q$ since this determintes their corresponding coefficeints in the output of the convex program, $y$. Thus, the method by which $\bm{M}_Q$ was constructed is of importance and determines the method by which we construct $w$.
+
+    \subsection{Separate Common Factors}
+    The method here corresponds to the construction method in \ref{detection:A:separateFactors}. We know from Equation \eqref{eq:A:commonFactors:cp} that each component in $P$ as defined in Equation \eqref{eq:A:commonFactors:P} contains exactly $c_{p}$ columns which correspond to exactly $c_{p}$ coefficients in the output vector $y$. The position of these coefficients in $y$ corresponds to the order in which they were added to create $\bm{M}_Q}$.
+    We then know that for $p_0$ the coefficeints that correspond to this period in $y$ are the first $c_{p_0}$ values. Likewise, for $p_1$, the coefficeints in $y$ are the next $c_{p_1}$ values. Generalizing, we see that the values in $y$ that correspond to the $i$th period from $P$ are:
+    \begin{align}
+        w_{p_i}^{*} &= y_j \text{, } \alpha_{i-1} \leq j \leq \alpha_{i} \\
+        \alpha_{i} &= \sum_{k = 0}^{i} c_{p_k}
+    \end{align}
+    Notice that $w_{p_i}^{*}$ is not guaranteed to be of legnth $p_i$.\footnote{In fact, in the case of separating out factors to form $\bm{M}_Q$, it will never be.} We therefore zero-pad $w_{p_i}^{*}$ to get $w_{p_i}$:
+    \begin{align}
+        w_{p_i} = \text{zp}(w_{p_i}^{*}, p_i)
+    \end{align}
+    where $\text{zp}(x, N)$ is a function which concatenates zeros to the end of $x$ until $|x| = N$. $w$ is then formed by concatenation:
+    \begin{align}
+        w = \begin{bmatrix}
+            w_{p_0} & w_{p_1} & w_{p_2} & \hdots & w_{p_n}
+        \end{bmatrix}
+    \end{align}
+
+    \subsection{Progressive Concatenation}
+    The method here corresponds to the construction method in \ref{detection:A:progressiveConcatenation}.
+
+
+\section{Creating redistribution matricies}
+Once the periods have been concatenated, we then have to construct $\bm{A}$ for input into the convex program. In contrast to $\bm{A}$ in Chapter \ref{chapter:detection}, 
+
+
+
+
+
+
+
+% Define $P$:
+% \begin{align*}
+%     P &= \Bigg( \bigcup_{\forall p, q \in Q} f(p) \cap f(q) \Bigg) \cup Q
+% \end{align*}
+% i.e. the union of the intersections of the factors of all the elements in $Q$.
+%
+% To find the column dimensionality, $c_{p}$, of the basis matrix $\bm{B_p}$ for $p \in P$:
+% \begin{align*}
+%     % c_{p} &= p - \sum_{f : f(p) \cap P \setminus p} \varphi(f)
+%     c_{p} &= p - \sum_{d|p \in P \setminus p} \varphi(d)
+% \end{align*}
+%
+% %% If N is the columns
+% % We then define $\bm{A}$ as:
+% % \begin{align*}
+% %     \bm{A} &= \begin{bmatrix}
+% %             \bm{B}_{p_0} \\
+% %             \bm{B}_{p_1} \\
+% %             \vdots \\
+% %             \bm{B}_{p_n} \\
+% %         \end{bmatrix}
+% %         , \text{ } \forall p \in P
+% % \end{align*}
+% % where there are $n$ elements in $\bm{P}$.
+%
+% To find the total column dimensionality, $c_{\boldsymbol{A}}$ of the matrix $\bm{A}$:
+% \begin{align*}
+%     c_{\bm{A}} &= \sum_{p \in P} c_p
+% \end{align*}
+
+% In this way, we can be assured that not only are the basis vectors in $\bm{A}$ linearly independent, but also that all traces of some period $q$ are removed from the residual signal $h$.
+
+% \subsection{This also works}
+% We can also get a basis matrix for the periods in $q$ by using the same equation as above that uses $varphi(n)$ by creating $\bm{A}$ along the way and keeping track of which periods (and factors of the periods) we've added along the way.
+%
+% Let $F = \emptyset$. To find the column dimensionality, $c_q$, for $q \in Q$:
+% \begin{align}
+%     c_q &= q - \sum_{d|q \in F} \varphi(d)
+% \end{align}
+%
+% We then add elements to $F$ every time we add a basis matrix $\bm{B}_q$ to $\bm{A}$:
+% \begin{align*}
+%     F &= \{ F \cup f(q) \}_{\neq}
+% \end{align*}
+% i.e. every time we process a period $q$, add all the factors of $q$ to $F$, removing duplicates.
+%
+% Repeat this process for every $q \in Q$, adding to $F$ along the way. (This means that we need to keep track of which factors we've added along the way which makes it uglier in some ways, better in others.)
+%
+% Therefore, we then define $\bm{A}$ as:
+% \begin{align*}
+%     \bm{A} &= \begin{bmatrix}
+%             \bm{B}_{q_0} &
+%             \bm{B}_{q_1} &
+%             \hdots &
+%             \bm{B}_{q_n}
+%         \end{bmatrix}
+%         , \text{ } \forall q \in \bm{Q}
+% \end{align*}
+% where there are $n$ elements in $\bm{Q}$.
+%
+% \section{Not a real section but describing getting the real periods back}

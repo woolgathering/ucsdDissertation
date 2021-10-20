@@ -16,6 +16,25 @@ Basis vectors are not orthogonal.
 
 The orthogonal, exactly periodic decomposition of Muresan and Parks is based on the algorithm presented in \cite{wise1976maximum}.
 
+In \cite{muresan2003orthogonal}, the process of orthogonal projection without constructing the orthogonal subspaces themselves is introduced. Let $x_p^\perp = \pi(x, P_p)^\perp$ be the orthogonal projection of $x$ onto subspace $P_p$.
+
+To make $x_p \rightarrow x_p^\perp$, get the factors of $p$ so that $F_p = \{f : f|p, f \neq p\}$. Then project $x_p$ onto the subspaces corresponding with $F_p$, also subtracting out each of their factors as well from their own projections:
+\begin{align}\label{intro:orthgonalProjection}
+    \pi(x, P_p)^\perp = x_p - \sum_{f \in F_p} \pi(x_p, P_f)^\perp
+\end{align}
+where $x_p = \pi(x, P_p)$.
+
+It turns out, however, that since $P_f \in P_p$ for $f|p$, it is not necessary to single out each factor of $p$ before subtracting out each projection. One can simply subtract the non-orthogonalized projection $\pi(x_p, P_f)$ from $x_p$ for $f \in F_p$ to get $x_p^\perp$. Depending on the order, however, one will get projections equal to 0 for periods $d$ if $d|f$ and $f$ has already been subtracted. For instance:
+\begin{align*}
+    x_{25} &= \pi(x, P_{25}) \\
+    \pi(x_{25}, P_5) &= 0
+\end{align*}
+
+In order to avoid projecting and subtracting vectors that will equal zero, it is possible to project only at periods $p/f'$, where $f'$ is a prime factor. We then redefine Equation \eqref{intro:orthgonalProjection}:
+\begin{align}
+    \pi(x, P_p)^\perp = x_p - \sum_{f \in F'_p} \pi \bigg( x_p, P_{\frac{p}{f}} \bigg)
+\end{align}
+where $F'_p = F_p \cap \mathbb{P}$ and $\mathbb{P}$ is the set of all prime numbers. A proof of this is given in Appendix XXX.
 
 
 \section{Ramanujan Periodic Decomposition}
