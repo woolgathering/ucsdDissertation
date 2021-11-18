@@ -2,11 +2,84 @@
 
 
 
-\subsection{Extraction of the Periodic Waveforms}
-The preceeding chapters almost exclusively examined the \emph{detection} of periodic sequences in a signal but in only a few instances are the periodic subsequences themselves revealed for further processing. Namely, while the method of Ramanujan sequences is extremely powerful in revealing the existence of periodic subsequences, the sequences themselves are difficult to recover.
-Likewise, the orthogonal, exactly periodic decomposition of \cite{muresan2003orthogonal} is less useful in audio-space since it is often the case that one desires the harmonic components to be included in the extraction of the waveforms. In order to recover the waveform, additional steps must be undertaken and the result is questionable.
+\subsection{Discussion of the Stop Function}\label{section:audioEffects:stopFunction}
+In this section, the stop function of the detection stage is revisted.
 
-In the method presented in \cite{sethares1999periodicity}, the waveform is derived \emph{first} and is therefore immediately available. In the quadratic optimization method presented in Chapter \ref{chap:qo}, it is relatively straightforward to derive the periodic subsequences by means of a similar process.
+    \subsubsection{Residual Power Threshold}
+    Perhaps the most striaghtforward stop function is checking power of the residual signal, $x_r$. Given a threshold $t$:
+    \begin{align}\label{eq:audioEffects:stopFunction:powerThreshold}
+        s(y, t) =
+            \begin{cases}
+                0, & \text{if } t \geq \sum_{N = 0}^{N-1} y[n]^2 \\
+                1, & \text{otherwise}
+            \end{cases}
+    \end{align}
+    When the periodicity transform is performed short-time on a signal, that is, in frames, it is typically best to set $t$ equal to some fractional amount of the input vector $x$ so as to allow the threshold for frame $i$, $t_i$, to be dynamic:
+    \begin{align*}
+        t_i = t \sum_{N = 0}^{N-1} x[n]^2
+    \end{align*}
+    where $0 \leq t < 1$. There are of course many variations of the above thresholding formulation in Equation \eqref{eq:audioEffects:stopFunction:powerThreshold} such as $||x||_p$.
+
+    If one uses the simple threshold stop function, it is important to recognize that it is possible to continue finding periodic data in a residual that carries no meaningful information as to the ``essence'' of the input signal (refer to the paragraph beginning this section). Although these ``phantom'' periodicities may help the convex program to better minimize the reconstruction error, they often add no value and can often distort the useful periodicities already detected.
+
+        As an example, let $x$ be the combination of three sinusoids with periods 17, 21, and 50, plus zero-mean Gaussian noise with a SNR of -18 dB:
+        \begin{figure}[h]
+            \centering
+            % \includegraphics[width=0.75\textwidth]{PATH/TO/MY/FIG}
+            \caption{[A signal $x$ that is the sum of three equal-amplitude sinusoids with $p = \{17, 21, 50\}$ plus zero-mean Gaussain noise.]A signal $x$ that is the sum of three equal-amplitude sinusoids with $p = \{17, 21, 50\}$ plus zero-mean Gaussain noise.}
+            \label{fig:audioEffects:stopFunction:residual:sinesPlusNoise}
+        \end{figure}
+        where $N$ is the length of the signal and is equal to 1000, and $G(n)$ is the Gaussian noise at sample $n$. What periods are found at various values of $t$? Below is the output of the convex program using the projection in Equation \eqref{eq:intro:sethares} and different values of $t$. We also set $t$ directly to simplify:
+        \begin{figure}[h]
+            \centering
+            % \includegraphics[width=0.75\textwidth]{PATH/TO/MY/FIG}
+            \caption[A figure showing the effect of different threshold values for the stop function.\index{Values of $t$}]{Results of period detection using various values of $t$. \emph{Top Panel:} $t = 0.2$. Note that not enough data is captured and only two periods are found. \emph{Middle Panel:} $t = 0.1$ Since $t$ is exactly equal to the SNR of the signal, we find that the three periods we expect are found before the algorithm terminates. \emph{Bottom Panel:} $t = 0.05$ Although we find the three periods we expect, the algorithm also finds periods in the residual noise. This has the further effect of distorting the already detected periodic waveforms as one will see in Section \ref{ch3:recoveringWaveforms}}
+            \label{fig:audioEffects:stopFunction:thresholdEffect}
+        \end{figure}
+        Notice that in the bottom panel, $t$ is set too low and we therefore see many periods which, while they do ``exist'', do not necessarly add information but are rather imparted by the projection process and numerical happenstance.
+
+        In a close-to-ideal world (one in which we admit noise), one would simply set $t$ to be the level of the noise floor in the signal. In this way, one would only capture the periodic components while leaving the noise (relatively) untouched. This, of course, is not possible in real data and is especially prone to error when non-integer periods are present. See Section \ref{ch3:nonintegerPeriods} for a longer discussion.
+
+
+    \subsubsection{Sum of the Power of the Periodic Components}
+    A novel way to approch the problem and one that keeps in mind the qualitative criteria of ``listenability'' is to check whether or not the sum of the powers of the detected periodic waveforms exceeds the power of the original signal. For convenience, we define the power to be $E(x) \equiv \sum_{n = 0}^{N - 1} |x[n]|^2$:
+    \begin{align}
+        s(x, X_Q) = \begin{cases}
+            0, & \text{if } E(x) \leq \sum_{x_q \in X_Q} E(x_q) \\
+            1, & \text{otherwise}
+        \end{cases}
+    \end{align}
+    where $X_Q$ is the set of projections of the best periods acquired through projection of $x_r$ onto $P_p$. Note that these projections are also of length $N$. This often results in a less-than-perfect reconstruction from a residual minimization standpoint but in practice has shown better listenability of the components themselves.
+
+    \subsubsection{Decrease in the Total Power of Periodic Components}
+    An interesting phenomenon was observed in processing real data, often data that contains noise and/or non-integer periodicities whereby the sums of the derived periodic components \emph{decreases} as more iterations are performed.
+
+    \subsubsection{Lack of Significant Periods}
+    If the input to the ML estimator is $x = \mathcal{N}(0, \sigma^2)$, the resulting powers of the periods, normalized as Equation \eqref{eq:intro:sethares:periodicNormGamma}, we see that there are no significant peaks in the periodogram:
+    \begin{figure}[h]
+        \centering
+        % \includegraphics[width=0.75\textwidth]{PATH/TO/MY/FIG}
+        \caption[Periodogram of zero-mean Gaussian noise for $2 \leq p \leq 500$ for $N = 1000$]
+        {Periodogram of zero-mean Gaussian noise for $2 \leq p \leq 500$ for $N = 1000$. Notice the conspicuous lack of significant periods for the ML estimator to choose from.}
+        \label{fig:audioEffects:gaussianPeriodogram}
+    \end{figure}
+
+    We can measure this by defining the ``flatness'' of the periodogram to be:
+    \begin{align} \label{eq:audioEffects:flatness}
+        P_{\text{flatness}}(P) &= \frac
+            {
+                % e^{\big( \frac{1}{N} \sum_{n=0}^{N-1} \ln P[n] \big)}
+                \sqrt[N]{\Pi_{n=0}^{N-1} P_n}
+                % \big( \Pi_{n=0}^{N-1} P_n \big)^{\frac{1}{N}}
+            }
+            {
+                \frac{1}{N} \sum_{n=0}^{N-1} P_n
+            }
+    \end{align}
+    where $N$ is the number of periods we search for (i.e. $N = P_{max} - P_{min}$) and $t$ is again a threshold, all typically converted to decibels. Notice that this is identical to the spectral flatness measure that is common in measuring the Fourier Transform of a discrete time signal. It proves useful in this regard as well, as a simple but effective measure of determining whether or not there remain any more significant periods in the data.
+
+    Suppose $x = S_1 + \mathcal{N}(0, \sigma^2)$ and $||S_1||_2 \ll ||\mathcal{N}(0, \sigma^2)||_2$. The resulting periodogram will be very similar to that of pure zero-mean Gaussain noise yet we know there is a periodic signal in $x$. What ought to be the interpretation in this case? In practice, it was found that in this case, the periodic signal $S_1$ is so insignificant so as to have no meaningful value as to the constitution of $x$. In other words, in such a case nothing of value is lost by disregarding $S_1$ given its overall weakness in the signal.
+
 
 \subsection{Time Stretching}
 

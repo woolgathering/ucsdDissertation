@@ -5,6 +5,32 @@ In \cite{sethares1999periodicity}, W. A. Sethares and T. W. Staley introduced th
 
 Since Sethares and Staley in 1999, the PT has been developed in multiple directions. This chapter concerns itself with the examining and presenting existing versions and their applicability to audio analysis and synthesis.
 
+\section{Notational and Terminological Conventions}
+Notational conventions:
+
+\begin{addmargin}[4em]{2em}% 1em left, 2em right
+\begin{itemize}
+    \renewcommand\labelitemi{--}
+    \item Matricies are always denoted with bold type: $\bm{A}$
+    \item Sets are denoted with un-bolded capital letters: $P$
+    \item $d|n$ means ``$d$ divides $n$'' and both $d$ and $n$ are integers
+    \item $\perp$ denotes orthogonality
+    \item $\varphi(n)$ is Euler's totient of the integer $n$
+    \item $\text{factors}(n) = \{f : f|n\}$ is a function that returns the set of factors of $n$
+    \item $\text{gcd}(a, b)$ is a function that returns the greatest common divisor of integers $a$ and $b$
+\end{itemize}
+\end{addmargin}
+
+Terminological conventions:
+\begin{addmargin}[4em]{2em}% 1em left, 2em right
+\begin{itemize}
+    \renewcommand\labelitemi{--}
+    \item \textbf{Base or Basis}: refers to the basis function used in the detection step. Typically the Natural Basis (i.e. a vector of 0's and 1's).
+    \item \textbf{Component}: refers to an extracted periodic component that may or may not be exactly periodic. A periodic component of a signal is always length $N$ (same as the origin signal).
+    \item \textbf{Atom}: refers to a single periodic waveform that comprises a component. In other words, a component with period $p$ contains oscillations of the $p$-period atom up to length $N$.
+\end{itemize}
+\end{addmargin}
+
 \section{Nonorthogonal Periodic Decomposition}
 Sethares and Staley
 
@@ -12,33 +38,53 @@ Original periodicity transform
 
 Basis vectors are not orthogonal.
 
-\section{Orthogonal Periodic Decomposition}
+\section{Orthogonal Periodic Decomposition}\label{section:intro:orthgonalDecomp}
 
 The orthogonal, exactly periodic decomposition of Muresan and Parks is based on the algorithm presented in \cite{wise1976maximum}.
 
-In \cite{muresan2003orthogonal}, the process of orthogonal projection without constructing the orthogonal subspaces themselves is introduced. Let $x_p^\perp = \pi(x, P_p)^\perp$ be the orthogonal projection of $x$ onto subspace $P_p$.
+    \subsection{Periodic Projection}
+    In \cite{muresan2003orthogonal}, the process of orthogonal projection without constructing the orthogonal subspaces themselves is introduced. Let $x_p^\perp = \pi(x, P_p)^\perp$ be the orthogonal projection of $x$ onto subspace $P_p$. To turn $x_p$ into $x_p^\perp$, get the factors of $p$ so that $F_p = \{f : f|p, f \neq p\}$. Then project $x_p$ onto the subspaces corresponding with $F_p$, also subtracting out each of their factors as well from their own projections:
+    \begin{align}\label{eq:intro:orthgonalProjectionLong}
+        x_{p}^{\perp} = \pi(x, P_p)^\perp = x_p - \sum_{f \in F_p} \pi(x_p, P_f)^\perp
+    \end{align}
+    where $x_p = \pi(x, P_p)$. Notice the recursion in this function.
 
-To make $x_p \rightarrow x_p^\perp$, get the factors of $p$ so that $F_p = \{f : f|p, f \neq p\}$. Then project $x_p$ onto the subspaces corresponding with $F_p$, also subtracting out each of their factors as well from their own projections:
-\begin{align}\label{intro:orthgonalProjection}
-    \pi(x, P_p)^\perp = x_p - \sum_{f \in F_p} \pi(x_p, P_f)^\perp
-\end{align}
-where $x_p = \pi(x, P_p)$.
+    It turns out, however, that since $P_f \in P_p$ for $f|p$, it is not necessary to single out each factor of $p$ before subtracting out each projection: one can simply subtract the non-orthogonalized projection $\pi(x_p, P_f)$ from $x_p$ for $f \in F_p$ to get $x_p^\perp$:
+    \begin{align}\label{eq:intro:orthgonalProjectionShorter}
+        x_{p}^{\perp} = x_p - \sum_{f \in F_p} \pi(x_p, P_f)
+    \end{align}
+    Depending on the order of subtraction, however, one will get projections equal to 0 for periods $d$ if $d|f$ and $f$ has already been subtracted. For instance, suppose the signal $x$ contains some component at $p = 25$ and all of the factors of 25, then that one projects the 25-space and subtracts it from $x$:
+    \begin{align*}
+        &x_{25} = \pi(x, P_{25}) \\
+        &\pi(x - x_{25}, P_5) = \overrightarrow{0}
+    \end{align*}
+    Since the 25-space already ``contains'' the 5-space (i.e. $5|25$), the resulting projection of $x - x_{25}$ onto $P_{5}$ will be equal to a vector of 0's.
 
-It turns out, however, that since $P_f \in P_p$ for $f|p$, it is not necessary to single out each factor of $p$ before subtracting out each projection. One can simply subtract the non-orthogonalized projection $\pi(x_p, P_f)$ from $x_p$ for $f \in F_p$ to get $x_p^\perp$. Depending on the order, however, one will get projections equal to 0 for periods $d$ if $d|f$ and $f$ has already been subtracted. For instance:
-\begin{align*}
-    x_{25} &= \pi(x, P_{25}) \\
-    \pi(x_{25}, P_5) &= 0
-\end{align*}
+    While Equation \eqref{eq:intro:orthgonalProjectionShorter} removes the need for the amount of recursion in Equation \eqref{eq:intro:orthgonalProjectionLong}, this can be further improved from a computational perspective. In order to avoid projecting and subtracting vectors that will equal zero, it is possible to project only at periods $p/f'$, where $f'$ is a prime factor, exploting the fact that the factors of the GCD of two integers $a$ and $b$ is the same set as the intersection of the factors of $a$ with the factors of $b$. That is,
+    \begin{align}\label{eq:intro:factorsGCDFactorsIntersect}
+        \text{factors}(\text{gcd}(a, b)) \equiv \text{factors}(a) \cap \text{factors}(b)
+    \end{align}
+    We then redefine Equation \eqref{eq:intro:orthgonalProjectionLong}:
+    \begin{align}\label{eq:intro:orthgonalProjection}
+        x_{p}^{\perp} = \pi(x, P_p)^\perp = x_p - \sum_{f \in F'_p} \pi \bigg( x_p, P_{p/f} \bigg)
+    \end{align}
+    where $F'_p = F_p \cap \mathbb{P}$ and $\mathbb{P}$ is the set of all prime numbers. A proof of this is given in Appendix XXX.
 
-In order to avoid projecting and subtracting vectors that will equal zero, it is possible to project only at periods $p/f'$, where $f'$ is a prime factor. We then redefine Equation \eqref{intro:orthgonalProjection}:
-\begin{align}
-    \pi(x, P_p)^\perp = x_p - \sum_{f \in F'_p} \pi \bigg( x_p, P_{\frac{p}{f}} \bigg)
-\end{align}
-where $F'_p = F_p \cap \mathbb{P}$ and $\mathbb{P}$ is the set of all prime numbers. A proof of this is given in Appendix XXX.
+    \subsection{Periodic Power}
+    Calculating the exactly periodic power at some period $p$ is performed using the method described in \cite{muresan2003orthogonal}, here reduced to a single equation. We will define the exactly periodic power of the orthogonal projection of $x$ onto $P_{p}^{\perp}$ as
+    \begin{align}
+        ||x_{p}^{\perp}||^2 = \Bigg( \frac{2p}{N} \sum_{l=0}^{M-1} \phi_{x}(lp) \Bigg) - \sum_{d|p, d \neq p} ||x_{f}^{\perp}||^2
+    \end{align}
+    where $\phi_R(k) = \sum_{j=0}^{N-1-k} r_{j} r_{j+k}$ is the unnormalized autocorrelation function of $R$, $N$ is the length of the signal, and $M = N/p$. In other words, the exactly periodic power of period $p$ is equivalent to the power at $p$, normalized by $2p/N$, minus the sum of all the exactly periodic powers of the factors of $p$. A critical point here is that it is possible for $||x_{p}^{\perp}||^2$ to be negative due to the subtraction step; in practice we therefore limit the lowest power to 0. This is merely for convenience and does not change the nature of the result. Additionally, the ``norm'' notation is used as convention and in the case of the exactly periodic power, is not the true norm of $x_{p}^{\perp}$. It is also helpful to normalize the exactly periodic power by dividing the result by the period. If not, the process is biased toward larger periods. Therefore:
+    \begin{align}\label{eq:intro:exactlyPeriodicPower}
+        ||x_{p}^{\perp}||^2 = \frac{\Bigg( \frac{2p}{N} \sum_{l=0}^{M-1} \phi_{x}(lp) \Bigg) - \sum_{d|p, d \neq p} ||x_{f}^{\perp}||^2} {p}
+    \end{align}
 
 
 \section{Ramanujan Periodic Decomposition}
 
 Vaidyanathan and Tenneti
 
-Struggles hardcore with non-integer periods. Suggestion when doing machine vibration is to adjust the samplerate so that the period aligns to an factor of the samplerate. This begs the question why one would have the need to search for a period one already knows is there. That is, without knowing the period a priori it would be impossible to adjust the samplerate accordingly.
+Very good, generally, but more challenging to get the original periodic waveform back, especially with its components.
+
+Takes a long time to compute. The better results are not often worth the wait.

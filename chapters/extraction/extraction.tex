@@ -1,106 +1,157 @@
 \chapter{Extraction of Periodic Bases}\label{chap:extraction}
 
-In contrast to other literature on the periodicity transform, where the primary and concern is the detection of periodicities and extraction of a single periodic waveform, we are concerned here with also hearing the basis vectors themselves.
+In contrast to other literature on the periodicity transform where the primary and concern is the detection of periodicities (and potentially extraction of a single periodic waveform), we are concerned here with also hearing the basis vectors themselves. That is, we desire \emph{qualitative coherence} among the atoms.
 
-We want to get the periodic bases out so that they are not necessarily exactly periodic, as is the concern when searching for the periods themselves. Suppose there is a signal, $x$, that is composed of of two signals, $x_0$ an $x_1$ that contain components at each of their factors down to 1 (i.e. they are not exactly periodic) and whose fundamental periods are not mututally prime. Let $C = \text{factors}(x_0) \cap \text{factors}(x_1)$ where $\text{factors}()$ is Equation \eqref{eq:getFactors}. We can see that the two signals share components at periods $c \in C$ and that in order to extract the periods, one must determine how much of each common component is contained in each signal.
+Suppose there is a signal, $x$, that is composed of of two signals, $x_0$ and $x_1$ that contain components at each of their factors down to 1 (i.e. they are not exactly periodic) and whose fundamental periods are not mututally prime. Let $C = \text{factors}(x_0) \cap \text{factors}(x_1)$ where $\text{factors}()$ is Equation \eqref{eq:getFactors}. We can see that the two signals share components at the periods in $C$ and that in order to extract the original $x_0$ and $x_1$, one must add the $C$ components \emph{back} to both $x_{p_0}^{\perp}$ and $x_{p_0}^{\perp}$. Further, one must determine how much of each $C$ component is contained in each $x_0$ and $x_1$.
 
+In order to solve this, we also set up a convex program whose input vector is the concatenation of the periods $q \in Q$ using their respecitve values in $b$ (output of Equation \eqref{eq:detection:reconstruction:coefficients}), zero padding as necessary so that each period is ``filled out''. Let this concatenation of periods be called $w$ whose construction is detailed in Section \ref{chap:extraction:constructionOfW}.
 
-% We need to create redistribution matricies in order to properly distribute the various factors of Q into all other possibilities. That is, suppose two periodic functions $f$ and $g$ of periods $p_f$ and $p_g$ have a common factor $d$. We can detect the $d$-component of both $f$ and $g$ independently but when it comes time to reconstruct, how do we know how much of the $d$-component goes into f and how much of the $d$-component goes into $g$? We can again solve this by formulating a convex program and solving in the standard format or by least-squares. In this case, however, we will concatenate the period coefficients, zero-padded if necesssary, as the input to the convex program.
+The entire extraction process follows these steps:
+\begin{enumerate}
+    \item \textbf{Create $w$}: from the coefficients acquired during the detection stage, $b$, create the vector $w$ which is the concatenation of these coefficients in their respetive position with respect to the period they are a part of, zero-padded as necessary.
+    \item \textbf{Create $R$}: create a redistribution matrix $R$ which redistributes the power at some common period between all possible candidates.
+    \item \textbf{Solve the convex program}: using $w$ and $R$, solve a convex program whose output will be called $\hat{w}$.
+    \item \textbf{Extraction of the original periods}: using $w$ and $\hat{w}$, extract the original waveforms.
+\end{enumerate}
 
-In order to solve this, we also set up a convex program whose input vector is the concatenation of the periods $q \in Q$ using their respecitve values in $y$ (output of Equation \eqref{eq:detection:convex}), zero padding as necessary so that each period is ``filled out''. Let this concatenation of periods be $w$.
+\section{Construction of $w$}\label{section:extraction:constructionOfW}
+As mentioned in Chapter \ref{chapter:detection}, it is important to know the order in which the periodic vectors were placed in $\bm{D}_Q$ since this determintes their corresponding coefficeints in the output of the convex program of Equation \eqref{eq:detection:reconstruction:coefficients}. Thus, the method by which $\bm{D}_Q$ was constructed is of importance and determines the method by which we construct $w$. The two methods presented below, however, are equivalent when reconstruction the components.
 
-\section{Construction of $w$}
-An important note here is the order in which the periodic vectors were placed in $\bm{M}_Q$ since this determintes their corresponding coefficeints in the output of the convex program, $y$. Thus, the method by which $\bm{M}_Q$ was constructed is of importance and determines the method by which we construct $w$.
-
-    \subsection{Separate Common Factors}
-    The method here corresponds to the construction method in \ref{detection:A:separateFactors}. We know from Equation \eqref{eq:A:commonFactors:cp} that each component in $P$ as defined in Equation \eqref{eq:A:commonFactors:P} contains exactly $c_{p}$ columns which correspond to exactly $c_{p}$ coefficients in the output vector $y$. The position of these coefficients in $y$ corresponds to the order in which they were added to create $\bm{M}_Q}$.
-    We then know that for $p_0$ the coefficeints that correspond to this period in $y$ are the first $c_{p_0}$ values. Likewise, for $p_1$, the coefficeints in $y$ are the next $c_{p_1}$ values. Generalizing, we see that the values in $y$ that correspond to the $i$th period from $P$ are:
+    \subsection{Separate Common Factors}\label{section:extraction:constructionOfw:separateFactors}
+    The method here corresponds to the construction method in \ref{detection:A:separateFactors}. We know from Equation \eqref{eq:A:commonFactors:cp} that each element in $R$ as defined in Equation \eqref{eq:A:commonFactors:P} contains exactly $c_{p}$ columns which correspond to exactly $c_{p}$ coefficients in the output vector $b$. The position of these coefficients in $b$ corresponds to the order in which they were added to create $\bm{D}_Q$.
+    We then know that for $r_0$ the coefficeints that correspond to this period in $b$ are the first $c_{r_0}$ values. Likewise, for $r_1$, the coefficeints in $b$ are the next $c_{r_1}$ values. Generalizing, we see that the values in $b$ that correspond to the $i$th element from $R$ are:
     \begin{align}
-        w_{p_i}^{*} &= y_j \text{, } \alpha_{i-1} \leq j \leq \alpha_{i} \\
-        \alpha_{i} &= \sum_{k = 0}^{i} c_{p_k}
+        w_{r_i}^{*} &= b_j \text{, } \alpha_{i-1} \leq j \leq \alpha_{i} \label{eq:extraction:constructionOfw:separate:w_pi}\\
+        \alpha_{i} &= \sum_{k = 0}^{i} c_{r_k} \label{eq:extraction:constructionOfw:separate:alpha}
     \end{align}
-    Notice that $w_{p_i}^{*}$ is not guaranteed to be of legnth $p_i$.\footnote{In fact, in the case of separating out factors to form $\bm{M}_Q$, it will never be.} We therefore zero-pad $w_{p_i}^{*}$ to get $w_{p_i}$:
+    Notice that $w_{r_i}^{*}$ is not guaranteed to be of length $r_i$.\footnote{In fact, in the case of separating out factors to form $\bm{D}_Q$, it will never be.} We therefore zero-pad $w_{r_i}^{*}$ to get $w_{r_i}$:
     \begin{align}
-        w_{p_i} = \text{zp}(w_{p_i}^{*}, p_i)
+        w_{r_i} = \text{zp}(w_{r_i}^{*}, r_i)
     \end{align}
     where $\text{zp}(x, N)$ is a function which concatenates zeros to the end of $x$ until $|x| = N$. $w$ is then formed by concatenation:
-    \begin{align}
+    \begin{align}\label{eq:extraction:constructionOfw:w}
         w = \begin{bmatrix}
-            w_{p_0} & w_{p_1} & w_{p_2} & \hdots & w_{p_n}
-        \end{bmatrix}
+            w_{r_0} & w_{r_1} & w_{r_2} & \hdots & w_{r_n}
+        \end{bmatrix}^{T}
     \end{align}
 
+    This process is outlined graphically in Figure XXXX. Suppose $Q = \{8, 10, 15\}$ and therefore $R = \{1, 2, 5, 8, 10, 15\}$.
+
     \subsection{Progressive Concatenation}
-    The method here corresponds to the construction method in \ref{detection:A:progressiveConcatenation}.
+    The method here corresponds to the construction method in \ref{detection:A:progressiveConcatenation}. Using Equation \eqref{eq:A:noFactors:cp}, we know that we can determine the column dimensionality for period $q_i$ that occurs at step $i$.
+    In the same way as in Section \ref{section:extraction:constructionOfw:separateFactors}, the column dimensionality corresponds to the number of values in $y$ that are associated with period $q_i$. The position of the coefficients in $y$ also correspond to the order in which successive $q_i$ basis matricies were added to form $\bm{D}_Q$.
+    From Equation \eqref{eq:A:noFactors:cp}, we know that the first $c_{q_0} = q_0$ coefficients in $y$ correspond to period $q_0$. Likewise for $q_1$, its corresponding coefficients in $y$ are the next $c_{q_1}$ values.
+
+    We can generalzie this process to be virtually identical to Equations \eqref{eq:extraction:constructionOfw:separate:alpha} and \eqref{eq:extraction:constructionOfw:separate:w_pi}. The only difference is that in Equation \eqref{eq:extraction:constructionOfw:separate:alpha}, we substitute $c_{p_k}$ for $c_{q_k}$. In exactly the same way as above, $w_{q_i}^{*}$ is not guaranteed to be of legnth $p_i$ \emph{except} when $i = 0$. We again zero-pad using $\text{zp}(x, N)$ to get $w_{q_i}$:
+    \begin{align}
+        w_{q_i}^{*} &= b_j \text{, } \alpha_{i-1} \leq j \leq \alpha_{i} \\
+        \alpha_{i} &= \sum_{k = 0}^{i} c_{q_k} \\
+        w_{q_i} &= \text{zp}(w_{q_i}^{*}, q_i)
+    \end{align}
+    We then form $w$ exactly as in Equation \eqref{eq:extraction:constructionOfw:w}, replacing $r_i$ with $q_i$.
 
 
-\section{Creating redistribution matricies}
-Once the periods have been concatenated, we then have to construct $\bm{A}$ for input into the convex program. In contrast to $\bm{A}$ in Chapter \ref{chapter:detection}, 
+\section{Creating redistribution matrix, $\bm{R}$}
+Once the periods (and perhaps their factors) have been concatenated into a single $1 \times \Sigma(Q)$ or $1 \times \Sigma(R)$ column, we then construct $\bm{R}$ for input into the convex program. In contrast to $\bm{A}$ in Chapter \ref{chapter:detection}, the columns of this matrix serve to redistribute the powers from common factors among the periods in $Q$ or $R$ in order to best approximate the periodic components with each of their possible subcomponents re-added. To reduce complexity, we again exploit Equation \eqref{eq:intro:factorsGCDFactorsIntersect} (i.e. the factors of the GCD of two integers $a$ and $b$ is the same set as the intersection of the factors of $a$ with the factors of $b$).
 
-
-
-
-
-
-
-% Define $P$:
-% \begin{align*}
-%     P &= \Bigg( \bigcup_{\forall p, q \in Q} f(p) \cap f(q) \Bigg) \cup Q
-% \end{align*}
-% i.e. the union of the intersections of the factors of all the elements in $Q$.
-%
-% To find the column dimensionality, $c_{p}$, of the basis matrix $\bm{B_p}$ for $p \in P$:
-% \begin{align*}
-%     % c_{p} &= p - \sum_{f : f(p) \cap P \setminus p} \varphi(f)
-%     c_{p} &= p - \sum_{d|p \in P \setminus p} \varphi(d)
-% \end{align*}
-%
-% %% If N is the columns
-% % We then define $\bm{A}$ as:
-% % \begin{align*}
-% %     \bm{A} &= \begin{bmatrix}
-% %             \bm{B}_{p_0} \\
-% %             \bm{B}_{p_1} \\
-% %             \vdots \\
-% %             \bm{B}_{p_n} \\
-% %         \end{bmatrix}
-% %         , \text{ } \forall p \in P
-% % \end{align*}
-% % where there are $n$ elements in $\bm{P}$.
-%
-% To find the total column dimensionality, $c_{\boldsymbol{A}}$ of the matrix $\bm{A}$:
-% \begin{align*}
-%     c_{\bm{A}} &= \sum_{p \in P} c_p
-% \end{align*}
-
-% In this way, we can be assured that not only are the basis vectors in $\bm{A}$ linearly independent, but also that all traces of some period $q$ are removed from the residual signal $h$.
-
-% \subsection{This also works}
-% We can also get a basis matrix for the periods in $q$ by using the same equation as above that uses $varphi(n)$ by creating $\bm{A}$ along the way and keeping track of which periods (and factors of the periods) we've added along the way.
-%
-% Let $F = \emptyset$. To find the column dimensionality, $c_q$, for $q \in Q$:
-% \begin{align}
-%     c_q &= q - \sum_{d|q \in F} \varphi(d)
+Let $D$ be the the periods in $\bm{D}_Q$ in the order in which they were added.\footnote{Note that the periods in $\bm{D}_Q$ are different depending on which method was used from Section \ref{section:detection:D_Q}.} Further, let $D^{2} = \{(a,b) : a,b \in D \}$ be the Cartesian product of $D$. For each $d_{i}^{2} \in D^2$, create a set of column vectors so that we redistribute the power of all common factors from $d_{i,0}^{2}$ (the first element in $d_{i}^{2}$) to $d_{i,1}^{2}$ (the second element in $d_{i}^{2}$). Generalizing for a single column of dimension $s$ for an arbitrary $i$:
+\begin{align}
+    \Gamma(D, d_{i}, s) &= \begin{bmatrix}
+        \gamma(g, D_0, s, d_{i}^{2}) \\ \gamma(g, D_1, s, d_{i}^{2}) \\ \vdots \\ \gamma(g, D_n, s, d_{i}^{2})
+    \end{bmatrix}^{T}, \text{ } 0 \leq s < g \\[1.5em]
 % \end{align}
 %
-% We then add elements to $F$ every time we add a basis matrix $\bm{B}_q$ to $\bm{A}$:
-% \begin{align*}
-%     F &= \{ F \cup f(q) \}_{\neq}
-% \end{align*}
-% i.e. every time we process a period $q$, add all the factors of $q$ to $F$, removing duplicates.
+% \begin{align}
+    \gamma(g, p, s, d_{i}) &=  \begin{cases}
+            -\delta_{g}^{s}(p), & \text{if } p = d_{i,0}^{2} \\
+            \delta_{g}^{s}(p), & \text{if } p = d_{i,1}^{2} \\
+            \overrightarrow{0}, & \text{otherwise}
+        \end{cases} \label{eq:extraction:smallGamma}
+\end{align}
+where $\delta_{p}^{s}(n)$ is Equation \eqref{eq:naturalBasisVector} and $g = \text{gcd}(d_{i,0}^{2}, d_{i,1}^{2})$. Notice that the length of $\Gamma(D, d_{i}, s)$ is equal to the sum of the periods in $D$. That is:
+\begin{align*}
+    \bigg| \Gamma(D, d_{i}, s) \bigg| = \sum_{d \in D} d
+\end{align*}
+For any pair of periods in $D$, this moves the power from a common factor between elements in $d_{i}^{2}$ from $d_{i,0}^{2}$ to $d_{i,1}^{2}$. Therefore, the full redistribution matrix $\bm{R}$ is:
+\begin{align}\label{eq:extraction:R}
+    \bm{R} = \begin{bmatrix}
+        \Gamma(R, d_{0}^{2}, s) &
+        \Gamma(R, d_{1}^{2}, s) &
+        \hdots &
+        \Gamma(R, d_{n}^{2}, s)
+    \end{bmatrix}
+\end{align}
+$\bm{R}$ has the dimensionality:
+\begin{align}
+    \Bigg( \sum_{d_{i}^{2} \in D^{2}} \text{gcd}(d_{i_{0}}^{2}, d_{i_{1}}^{2}) \Bigg) \times \big| D^2 \big|
+\end{align}
+In practice, $s$ ought to ascend one integer at a time from 0 to $\text{gcd}(d_{i,0}^{2}, d_{i,1}^{2}) - 1$ in order to preserve alignment between $\bm{R}$ and $b$, the output of the convex program in Chapter \ref{chapter:detection}.
+
+The process is illustrated in Figure XXXX below for $Q = \{8, 10, 15\}$:
+
+    \subsection{Complications}
+    This all begs the question: what if two periodic components, $x_0$ and $x_1$ with periods $p_0$ and $p_1$ respectively, share a common factor $d$ but $x_0$ does not in fact contain a $d$ component? Or that the $d$ component of $x_0$ is exactly ``out of phase'' with the $d$ component of $x_1$ such that the total power of $d$ in $x$ is 0? Unfortunately, it is impossible to ascertain, a posteriori, what part of a common factor component $d$ belongs to $x_0$ and $x_1$ in what phase (or rotation). The best solution, then, is to redistribute according to the ``least-shitty'' standard. That is, we distribute the common component $d$ equally upwards to all candidates so as to minimize the possible error.
+
+    This is equivalent to the following game: suppose we are told that we will be given a random number such that it is contained in the interval $[0, 1]$ and is linearly distributed. Then we are asked to choose a number in that same interval and that we will be awarded a prize that is proportional to the inverse of the error of our choice. Suppose further that we get 100 runs. What is the best choice to maximize our winnings over the course of all 100 runs? Here, the best choice is exactly halfway between the lower and upper extremes, 0.5, for all runs. This is the number that will minimize our total error over the length of the game (and therefore maximize our winnings). The distribution of the power of common facotrs equally between all candidates functions in a virtually identical way, minimizing, statistically, our total error.
+
+
+\section{Solving the Convex Program}
+After using the method of construction above, it is virtually guaranteed that the columns of $\bm{R}$ are not linearly independent and thus the system is likley to be overdetermined. $\bm{R}$ must therefore be orthogonalized in some way so as to obtain a unique solution in a convex program. There are two (three) ways in which this can be accomplished: row reduction, and QR/LU factorization.\footnote{Why not construct the matrix in a way similar to that of $\bm{A}$ in Chapter \ref{chapter:detection}? It is very difficult to ensure that all periods will be distributed correctly if performed this way and it is in fact easier and more simple to decompose the matrix $\bm{R}$.}
+
+Let the solution to the convex program with $\bm{R}$ as its input be $o$. Therefore , we solve
+\begin{align}
+    \bm{R}o = w
+\end{align}
+
+    \subsection{Column Reduction}
+    The most simple method is to simply keep the first $\text{rank}(\bm{R})$ columns. The result is then used as the matrix in the linear system $\bm{R}o = w$. Unfortunately, this method of reduction does not work if $|Q| = 1$ since:
+    \begin{align*}
+        \bm{R} = \overrightarrow{1}
+    \end{align*}
+    and $|R| = q_{0}$. In that case, we must use least-squres without reduction:\footnote{$|Q| = 1$ is a special case and is equal to simply projecting $x$ onto $P_{q_0}$ without orthogonlization.}
+    \begin{align*}
+        o = ( \bm{R}^T\bm{R} )^{-1} \bm{R}^T b
+    \end{align*}
+
+    \subsection{QR and LU Factorization}
+    It is also possible, and indeed often preferable, to decompose $\bm{R}$ by using either QR or LU decomposition. QR decomposition is essentially Graham-Schmidt orthogonalization of each column of $\bm{R}$. For rectangular matricies, the QR decomposition procedure solves
+    \begin{align}
+        \bm{A} = \bm{Q}_1 \bm{R}_1
+    \end{align}
+    with $\bm{Q}_1$ a unitary matrix and $\bm{R}_1$ being an $n \times n$ upper triangular matrix for input $\bm{A}$ being an $m \times n$ matrix. In this case, we set $\bm{A} = \bm{R}$, then use $\bm{R}_1$ in the convex program.
+
+    LU decomposition is essentially a type of Gaussian elimination:
+    \begin{align}
+        \bm{A} = \bm{L}\bm{U}
+    \end{align}
+    with $\bm{L}$ being a lower triangular/trapezoidal matrix and $\bm{U}$ being an upper triangular/trapezoidal matix. Again, set $\bm{A} = \bm{R}$ and use the upper triangular/trapezoidal matrix $\bm{U}$ in the convex program.
+
+
+\section{Extracting the Periods from $o$}
+Using either of the above methods results in a vector $o$ (having the same length as $w$) which is a ``reconstruction'' of $w$ using $\bm{R}$. The method of extracting the reconstructed periods, $\hat{w}$, from $w$ is relatively striaghtforward:
+\begin{align}
+    \hat{w} = w - o
+\end{align}
+This works by turning the original method of approximation on its head. By utilizing the error produced by approximating $w$ with the redistribution matrix $\bm{R}$, we can thereby get the representation of the periods that construct the original signal with periods that are of minimum power.
+
+We then see that, given the construction of $w$ in Section \ref{section:extraction:constructionOfW}, a single period of $d_0$ is in the first $d_0$ values of $\hat{w}$, the single period of $d_1$ is in the next $d_1$ values, etc. Generalizing, a single period corresponding to the $i$th entry in $D$ is:
+\begin{align}
+    \hat{x}_{d_i} &= \hat{w}_j \text{, } \alpha_{i-1} \leq j \leq \alpha_{i} \\
+    \alpha_i &= \sum_{j = 0}^{i} d_j \text{, } d \in D
+\end{align}
+Recall that $D \equiv R$, the only difference is that the elements of $D$ are in the same order used to construct $D_{Q}$. This means that $Q \in D$ and there will therefore be a set of consectuive values in $\hat{w}$ that correspond to a $q \in Q$.
+
+% \section{Waveform Interference}
+% Suppose a signal $S$ is composed of two periods $p_0$ and $p_1$ such that the periods are mututally prime. If the length of the input signal $S$ is not an integer multiple of $p_0 p_1$, one or both of the periods will be cut short and essentially contain a step-function in its final repetition. When we reconstruct these periods, this is precisely what we see:
 %
-% Repeat this process for every $q \in Q$, adding to $F$ along the way. (This means that we need to keep track of which factors we've added along the way which makes it uglier in some ways, better in others.)
+% In practice using an a signal that contains arbitrary periodic components, it is not possible to either a) assure that the length of the input is a integer multiple of all periods contained within or b) acquire enough samples of the signal to ensure this is the case. What to do then?
 %
-% Therefore, we then define $\bm{A}$ as:
-% \begin{align*}
-%     \bm{A} &= \begin{bmatrix}
-%             \bm{B}_{q_0} &
-%             \bm{B}_{q_1} &
-%             \hdots &
-%             \bm{B}_{q_n}
-%         \end{bmatrix}
-%         , \text{ } \forall q \in \bm{Q}
-% \end{align*}
-% where there are $n$ elements in $\bm{Q}$.
+% An answer is to envelope the bases in the detection stage so that samples toward the center, where we can be more assured (but not guarenteed) that there are complete periods to evaluate. Let the window function be $W_N$ where $N$ is the length of the window. Doing so means that the bases are not guarenteed to be orthogonal and therefore must be modified. It is also the case that we must manually weight the indicies so that the values near the edge, where the window approaches 0, are weighted less than those in the center which are closer to 1. In fact, one must (un)weight all samples where $W_N[n] \neq 1$.
 %
-% \section{Not a real section but describing getting the real periods back}
+% Unfortunately, this also has its drawbacks. Firstly, the efficacy of this process diminishes with the length of the period as it relates to the length of the input $S$ and the slope of the window $W_s$. Example: suppose there are two periods $p_0 = 4$ and $p_1 = 499$. Suppose further that $N_{S} = 1000$ and we window $S$ with a Hann window. One can see that for $p_0$, there are many repetitions near the center of the signal and that there is lots of time for the period to be detected at all its values. In contrast, $p_1$ may not have any complete repetitions... or maybe it's fine. I don't know.
+
+\section{Example of Periodic Base Extraction}
+Let us return to the example of the previous chapter where $Q = \{8, 10, 15\}$ that are each sine waves with the same amplitude and 0 phase at $x[0]$ with no noise. Let $N = 1000$. We construct $\bm{D}_Q$ by progressive concatenation (i.e. $R$ contains no factors of the elements in $Q$). The signal and the solution to the detection program are given in Figure XX.
+
+
+We then construct $w$ using Equation \eqref{eq:extraction:constructionOfw:w} and $\bm{R}$ using Equation \eqref{eq:extraction:R}. We then use LU factorization to get $o$. Subtracting $\hat{r}$ from $w$ to get $\hat{w}$. Both $w$ and $\hat{w}$ are given in Figure XX. It is clear from the lower panel that we can indeed see the original periodic waveforms. These are given in Figure XX.
